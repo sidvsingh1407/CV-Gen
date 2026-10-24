@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// ENUMS
+// ----------------------------------------------------------------------------
+
+enum EntryType {
+  experience
+  project
+  freelance
+  education
+  certification
+  skill
+  position
+  volunteer
+  award
+}
+
+enum Visibility {
+  always
+  on_request
+  never
+}
+
+enum FactKind {
+  free_text
+  locked_number
+}
+
+enum ContextMode {
+  open_market
+  campus
+}
+
+enum Source {
+  generated
+  edited
+}
+
+enum RunStatus {
+  pending
+  processing
+  completed
+  failed
+  cancelled
+}
+
+enum CheckVerdict {
+  supported
+  partly_supported
+  unsupported
+  not_yet_checked
+}
+
+// ----------------------------------------------------------------------------
+// MODELS
+// ----------------------------------------------------------------------------
+
+model User {
+  id              String         @id @default(uuid()) @db.Uuid
+  email           String         @unique
+  dailyRunCount   Int            @default(0) @map("daily_run_count")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  profile         Profile?
+  ruleSettings    RuleSettings?
+  runs            Run[]
+
+  @@map("users")
+}
+
+model Profile {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @unique @map("user_id") @db.Uuid
+  header          Json
+  showMarks       Boolean        @default(false) @map("show_marks")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries         Entry[]
+
+  @@map("profiles")
+}
+
+model Entry {
+  id              String         @id @default(uuid()) @db.Uuid
+  profileId       String         @map("profile_id") @db.Uuid
+  type            EntryType
+  title           String
+  organization    String?
+  start           String?        // Allows incomplete dates, "YYYY-MM", "Ongoing"
+  end             String?
+  visibility      Visibility     @default(always)
+  placement       String?
+  displayOrder    Int            @default(0) @map("display_order")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  profile         Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  facts           Fact[]
+
+  @@map("entries")
+}
+
+model Fact {
+  id              String         @id @default(uuid()) @db.Uuid
+  entryId         String         @map("entry_id") @db.Uuid
+  text            String
+  kind            FactKind       @default(free_text)
+  evidenceNote    String?        @map("evidence_note")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  entry           Entry          @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@map("facts")
+}
+
+model RuleSettings {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @unique @map("user_id") @db.Uuid
+  settings        Json
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("rule_settings")
+}
+
+model Run {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @map("user_id") @db.Uuid
+  jdText          String         @map("jd_text")
+  company         String
+  roleTitle       String         @map("role_title")
+  contextMode     ContextMode    @default(open_market) @map("context_mode")
+  threshold       Int
+  status          RunStatus      @default(pending)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fitResult       FitResult?
+  cvVersions      CvVersion[]
+  checkLogs       CheckLog[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("runs")
+}
+
+model FitResult {
+  id                 String      @id @default(uuid()) @db.Uuid
+  runId              String      @unique @map("run_id") @db.Uuid
+  requirementScores  Json        @map("requirement_scores")
+  domainPercentages  Json        @map("domain_percentages")
+  total              Int
+  stabilityFlag      Boolean     @default(false) @map("stability_flag")
+  decision           String
+  overrideFlag       Boolean     @default(false) @map("override_flag")
+  createdAt          DateTime    @default(now()) @map("created_at")
+
+  run                Run         @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@map("fit_results")
+}
+
+model CvVersion {
+  id              String         @id @default(uuid()) @db.Uuid
+  runId           String         @map("run_id") @db.Uuid
+  cv              Json
+  source          Source         @default(generated)
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  run             Run            @relation(fields: [runId], references: [id], onDelete: Cascade)
+  checkLogs       CheckLog[]
+
+  @@map("cv_versions")
+}
+
+model CheckLog {
+  id              String         @id @default(uuid()) @db.Uuid
+  runId           String         @map("run_id") @db.Uuid
+  cvVersionId     String         @map("cv_version_id") @db.Uuid
+  bulletId        String         @map("bullet_id")
+  citedFactIds    String[]       @db.Uuid @map("cited_fact_ids")
+  layer1Result    Boolean        @map("layer_1_result")
+  layer2Verdict   CheckVerdict   @map("layer_2_verdict")
+  reason          String?
+  retries         Int            @default(0)
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  run             Run            @relation(fields: [runId], references: [id], onDelete: Cascade)
+  cvVersion       CvVersion      @relation(fields: [cvVersionId], references: [id], onDelete: Cascade)
+
+  @@map("check_logs")
+}
