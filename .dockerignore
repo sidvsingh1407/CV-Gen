@@ -1,0 +1,15 @@
+node_modules
+.git
+.env*
+!.env.example
+.next
+!.next/standalone
+!.next/static
+dist
+e2e
+playwright-report
+test-results
+coverage
+README.md
+Dockerfile
+.dockerignore

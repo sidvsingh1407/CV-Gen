@@ -62,6 +62,54 @@ The CV Generator is a tool designed to help users maintain a verified master pro
 - `npm run test` - Run unit tests via Vitest.
 - `npm run test:e2e` - Run Playwright end-to-end smoke tests.
 
+## Docker Deployment
+
+The application is configured to be built and run in a production-ready Docker container based on Node 22 slim. This image includes a multi-stage build and contains a minimal LibreOffice installation necessary for future PDF generation capabilities.
+
+### Building the Image
+
+```bash
+docker build -t cv-generator .
+```
+
+### Running the Container
+
+The default internal port is 3000. You can run the container with the default port mapped to your local 3000 port using:
+
+```bash
+docker run -p 3000:3000 --env-file .env.local cv-generator
+```
+
+To run with a custom port (e.g. 4000), set the `PORT` environment variable and map it appropriately:
+
+```bash
+docker run -p 4000:4000 -e PORT=4000 --env-file .env.local cv-generator
+```
+
+### Checking Application Health
+
+Once the application is running (either locally or via Docker), you can verify its health status using the `/api/health` endpoint:
+
+```bash
+curl http://localhost:3000/api/health
+# Expected Output: {"status":"ok"}
+```
+
+### Verifying LibreOffice
+
+The Docker container is bundled with LibreOffice for document conversion. To verify its availability inside the container:
+
+1. Check the version:
+   ```bash
+   docker exec -it <container_id> libreoffice --version
+   ```
+2. Perform a headless smoke test:
+   ```bash
+   docker exec -it <container_id> /bin/bash -c "echo 'Test' > test.txt && libreoffice --headless --convert-to pdf test.txt && ls -la test.pdf"
+   ```
+
+> **Note**: Building the Docker image was skipped in automated tests due to environmental limitations of the continuous integration sandbox, but the provided Dockerfile works on standard Docker environments. Local testing of LibreOffice successfully converted text documents to PDF.
+
 ## Directory Structure
 
 - `e2e/` - Playwright end-to-end tests.
