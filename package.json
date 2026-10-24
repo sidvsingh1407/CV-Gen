@@ -8,10 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:db": "dotenv -e .env -v DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/cv_generator_test?schema=public\" -- prisma migrate deploy && dotenv -e .env -- vitest run src/lib/db/__tests__",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
     "next": "16.4.3",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
     "@playwright/test": "^1.64.1",
+    "@prisma/client": "^5.22.0",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
@@ -29,12 +32,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.7",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.10",
+    "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8.3.5",

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cv_generator_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-cv_generator}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init-dbs.sql:/docker-entrypoint-initdb.d/init-dbs.sql
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-cv_generator}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

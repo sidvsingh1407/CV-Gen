@@ -8,13 +8,13 @@ The CV Generator is a tool designed to help users maintain a verified master pro
 
 - Foundation Next.js application setup.
 - Basic minimal landing page.
+- Database schemas and ORM integration (PostgreSQL & Prisma).
 - Testing infrastructure (Vitest, Playwright).
 - Linting and Formatting (ESLint, Prettier).
 - CI/CD ready build scripts.
 
 **Planned Features (Not Yet Implemented):**
 
-- Database schemas and ORM integration.
 - User authentication.
 - Master profile management.
 - CV upload and parsing.
@@ -28,6 +28,8 @@ The CV Generator is a tool designed to help users maintain a verified master pro
 - React
 - TypeScript
 - Tailwind CSS
+- PostgreSQL (Database)
+- Prisma (ORM and migrations)
 - Zod (Runtime validation)
 - Vitest (Unit testing)
 - Playwright (E2E testing)
@@ -49,7 +51,38 @@ The CV Generator is a tool designed to help users maintain a verified master pro
 3. Set up environment variables (copy the template):
    ```bash
    cp .env.example .env.local
+   cp .env.example .env
    ```
+
+## Local Database Setup
+
+We use PostgreSQL as our database managed via Docker Compose.
+
+1. Ensure Docker is running.
+2. Start the database containers (this will provision `cv_generator` and `cv_generator_test` databases):
+   ```bash
+   docker compose up -d
+   ```
+3. Apply the initial schema migrations to the development database:
+   ```bash
+   npx prisma migrate dev
+   ```
+
+## Database Schema Overview
+
+The database contains the following core entities:
+
+- `users`: Core identity and usage limits (e.g. daily run count)
+- `profiles`: Master profile settings holding structured contact/header data
+- `entries`: Historical log of experience, education, and skills.
+- `facts`: Micro-facts tied to entries, supporting fact checking and precise locked numbers.
+- `rule_settings`: User CV generation preferences.
+- `runs`: Historical tracking of AI generation jobs triggered for specific Job Descriptions.
+- `fit_results`: Analytical scoring of a user profile against a JD requirement set.
+- `cv_versions`: The structured history of generated and user-edited CVs.
+- `check_logs`: Detailed, fact-level semantic checking and audit logging for claims made on CVs.
+
+Relationships are carefully modeled with cascading deletion behavior from the `users` level down to their generated items to prevent orphaned records and facilitate user data removal in the future. Structured content (like CV data and `rule_settings`) leverage `JSONB`, while heavily constrained states leverage native PostgreSQL ENUMs. Additionally, certain numerical and array validations leverage custom PostgreSQL `CHECK` constraints which are strictly tested in database integration tests.
 
 ## Development Commands
 
@@ -60,7 +93,16 @@ The CV Generator is a tool designed to help users maintain a verified master pro
 - `npm run format` - Format code with Prettier.
 - `npm run typecheck` - Run TypeScript compiler checks without emitting files.
 - `npm run test` - Run unit tests via Vitest.
+- `npm run test:db` - Run integration tests targeting the isolated `cv_generator_test` PostgreSQL database. Migrations are automatically applied during this script.
 - `npm run test:e2e` - Run Playwright end-to-end smoke tests.
+
+### Production Migrations
+
+To apply pending migrations safely to a real production environment, you should never use `prisma db push` or `prisma migrate dev`. Use the deployment command:
+
+```bash
+npx prisma migrate deploy
+```
 
 ## Docker Deployment
 
