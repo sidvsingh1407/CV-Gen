@@ -19,17 +19,23 @@ describe('Profile Service', () => {
   let user2Id: string
 
   beforeEach(async () => {
-    await prisma.user.deleteMany({})
-
-    const user1 = await prisma.user.create({ data: { email: 'user1@example.com' } })
-    const user2 = await prisma.user.create({ data: { email: 'user2@example.com' } })
+    const user1 = await prisma.user.create({
+      data: { email: `user1-${Date.now()}-${Math.random()}@example.com` },
+    })
+    const user2 = await prisma.user.create({
+      data: { email: `user2-${Date.now()}-${Math.random()}@example.com` },
+    })
 
     user1Id = user1.id
     user2Id = user2.id
   })
 
   afterAll(async () => {
-    await prisma.user.deleteMany({})
+    if (user1Id && user2Id) {
+      await prisma.user.deleteMany({
+        where: { id: { in: [user1Id, user2Id] } },
+      })
+    }
   })
 
   describe('Profile Operations', () => {

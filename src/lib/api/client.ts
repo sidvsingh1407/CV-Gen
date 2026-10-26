@@ -60,3 +60,9 @@ export const profileApi = {
     })
   },
 }
+
+export const preferencesApi = {
+  getPreferences: () => fetchApi('/api/preferences'),
+  updatePreferences: (data: unknown) =>
+    fetchApi('/api/preferences', { method: 'PATCH', body: JSON.stringify(data) }),
+}

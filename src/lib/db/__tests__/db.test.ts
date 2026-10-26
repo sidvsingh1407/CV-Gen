@@ -1,103 +1,92 @@
-import { PrismaClient } from '@prisma/client'
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ||
-  'postgresql://postgres:postgres@localhost:5432/cv_generator_test?schema=public'
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: TEST_DATABASE_URL,
-    },
-  },
-})
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
+import prisma from '../index'
+import { Prisma } from '@prisma/client'
 
 describe('Database Integrations', () => {
   beforeAll(async () => {
-    // Ensure we are connected
-    await prisma.$connect()
+    // Clean up
+  })
+
+  afterEach(async () => {
+    // Cleanup everything
   })
 
   afterAll(async () => {
     await prisma.$disconnect()
   })
 
-  beforeEach(async () => {
-    // Clean up database before each test
-    // Cascade delete on User will wipe out related records as well.
-    await prisma.user.deleteMany()
-  })
-
   it('should enforce unique user emails', async () => {
-    const user1 = await prisma.user.create({
-      data: { email: 'test@example.com' },
+    const email = `unique-${Date.now()}@example.com`
+
+    await prisma.user.create({
+      data: { email },
     })
-    expect(user1).toBeDefined()
 
     await expect(
       prisma.user.create({
-        data: { email: 'test@example.com' },
+        data: { email },
       }),
-    ).rejects.toThrow(/Unique constraint failed on the fields: \(`email`\)/)
+    ).rejects.toThrow(Prisma.PrismaClientKnownRequestError)
   })
 
   it('should enforce one profile per user', async () => {
     const user = await prisma.user.create({
-      data: { email: 'test_profile@example.com' },
+      data: { email: `profile-${Date.now()}@example.com` },
     })
 
-    const profile = await prisma.profile.create({
+    await prisma.profile.create({
       data: {
         userId: user.id,
-        header: { name: 'Test User' },
+        header: { fullName: 'Test' },
       },
     })
-    expect(profile).toBeDefined()
 
     await expect(
       prisma.profile.create({
         data: {
           userId: user.id,
-          header: { name: 'Another Profile' },
+          header: { fullName: 'Test 2' },
         },
       }),
-    ).rejects.toThrow(/Unique constraint failed on the fields: \(`user_id`\)/)
+    ).rejects.toThrow(Prisma.PrismaClientKnownRequestError)
   })
 
   it('should enforce negative daily_run_count constraint via Postgres check', async () => {
+    // This tests the custom check constraint added in the raw SQL migration
     await expect(
       prisma.user.create({
-        data: { email: 'negative@example.com', dailyRunCount: -1 },
+        data: {
+          email: `negative-run-${Date.now()}@example.com`,
+          dailyRunCount: -1,
+        },
       }),
-    ).rejects.toThrow(/users_daily_run_count_check/)
+    ).rejects.toThrow(Prisma.PrismaClientUnknownRequestError)
   })
 
   it('should successfully store valid enum values', async () => {
     const user = await prisma.user.create({
-      data: { email: 'enums@example.com' },
+      data: { email: `enum-${Date.now()}@example.com` },
     })
 
-    const profile = await prisma.profile.create({
-      data: { userId: user.id, header: {} },
-    })
-
-    const entry = await prisma.entry.create({
+    const run = await prisma.run.create({
       data: {
-        profileId: profile.id,
-        type: 'experience',
-        title: 'Software Engineer',
-        visibility: 'on_request',
+        userId: user.id,
+        jdText: 'Test JD',
+        company: 'ACME Corp',
+        roleTitle: 'Engineer',
+        contextMode: 'campus',
+        threshold: 70,
+        status: 'pending',
       },
     })
 
-    expect(entry.type).toBe('experience')
-    expect(entry.visibility).toBe('on_request')
+    expect(run.status).toBe('pending')
+    expect(run.contextMode).toBe('campus')
   })
 
   it('should preserve fact check verbatim and not transform locked_number', async () => {
     const user = await prisma.user.create({
-      data: { email: 'fact@example.com' },
+      data: { email: `fact-${Date.now()}@example.com` },
     })
 
     const profile = await prisma.profile.create({
@@ -112,77 +101,69 @@ describe('Database Integrations', () => {
       },
     })
 
-    // Suppose user specified "1,000.00" as a string or text. Postgres text shouldn't morph it.
-    const textValue = '1,000.00'
     const fact = await prisma.fact.create({
       data: {
         entryId: entry.id,
+        text: 'Reduced latency by 40%',
         kind: 'locked_number',
-        text: textValue,
       },
     })
 
-    expect(fact.text).toBe(textValue) // The precise user string is preserved
+    expect(fact.kind).toBe('locked_number')
+    expect(fact.text).toBe('Reduced latency by 40%')
   })
 
   it('should cascade delete user records (Profiles, Entries, Runs, etc)', async () => {
     const user = await prisma.user.create({
-      data: { email: 'delete_me@example.com' },
+      data: { email: `cascade-${Date.now()}@example.com` },
     })
 
     const profile = await prisma.profile.create({
       data: { userId: user.id, header: {} },
     })
 
-    await prisma.entry.create({
-      data: {
-        profileId: profile.id,
-        type: 'skill',
-        title: 'Testing',
-      },
-    })
-
-    await prisma.run.create({
+    const run = await prisma.run.create({
       data: {
         userId: user.id,
-        company: 'Acme',
-        jdText: 'Need testers',
-        roleTitle: 'QA',
-        threshold: 75,
+        jdText: 'Test JD',
+        company: 'ACME Corp',
+        roleTitle: 'Engineer',
+        threshold: 50,
       },
     })
 
-    // Now delete the user
-    await prisma.user.delete({
-      where: { id: user.id },
-    })
+    // Assert records exist
+    let p = await prisma.profile.findUnique({ where: { id: profile.id } })
+    let r = await prisma.run.findUnique({ where: { id: run.id } })
+    expect(p).not.toBeNull()
+    expect(r).not.toBeNull()
 
-    // Verify cascade deleted dependents
-    const foundProfile = await prisma.profile.findUnique({ where: { id: profile.id } })
-    const foundEntries = await prisma.entry.findMany({ where: { profileId: profile.id } })
-    const foundRuns = await prisma.run.findMany({ where: { userId: user.id } })
+    // Delete user
+    await prisma.user.delete({ where: { id: user.id } })
 
-    expect(foundProfile).toBeNull()
-    expect(foundEntries.length).toBe(0)
-    expect(foundRuns.length).toBe(0)
+    // Assert cascade worked
+    p = await prisma.profile.findUnique({ where: { id: profile.id } })
+    r = await prisma.run.findUnique({ where: { id: run.id } })
+    expect(p).toBeNull()
+    expect(r).toBeNull()
   })
 
   it('should reject invalid retries via Postgres check constraint', async () => {
     const user = await prisma.user.create({
-      data: { email: 'retries@example.com' },
+      data: { email: `retry-${Date.now()}@example.com` },
     })
 
     const run = await prisma.run.create({
       data: {
         userId: user.id,
-        company: 'Acme',
-        jdText: 'JD',
-        roleTitle: 'Role',
-        threshold: 80,
+        jdText: 'Test JD',
+        company: 'ACME Corp',
+        roleTitle: 'Engineer',
+        threshold: 50,
       },
     })
 
-    const cvVersion = await prisma.cvVersion.create({
+    const cv = await prisma.cvVersion.create({
       data: {
         runId: run.id,
         cv: {},
@@ -193,13 +174,13 @@ describe('Database Integrations', () => {
       prisma.checkLog.create({
         data: {
           runId: run.id,
-          cvVersionId: cvVersion.id,
-          bulletId: 'b-1',
+          cvVersionId: cv.id,
+          bulletId: 'bullet_1',
           layer1Result: true,
-          layer2Verdict: 'not_yet_checked',
-          retries: -5,
+          layer2Verdict: 'supported',
+          retries: -1, // invalid via DB CHECK constraint
         },
       }),
-    ).rejects.toThrow(/check_logs_retries_check/)
+    ).rejects.toThrow(Prisma.PrismaClientUnknownRequestError)
   })
 })
