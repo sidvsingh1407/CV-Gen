@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { entrySchema } from '@/lib/schemas/profile';
-import { z } from 'zod';
-import { useState } from 'react';
-import { profileApi, ApiError } from '@/lib/api/client';
-import { EntryType, Visibility } from '@prisma/client';
-import { AlertCircle } from 'lucide-react';
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { entrySchema } from '@/lib/schemas/profile'
+import { z } from 'zod'
+import { useState } from 'react'
+import { profileApi, ApiError } from '@/lib/api/client'
+import { EntryType, Visibility } from '@prisma/client'
+import { AlertCircle } from 'lucide-react'
 
-type EntryFormData = z.infer<typeof entrySchema>;
+type EntryFormData = z.infer<typeof entrySchema>
 
 export function EntryForm({
   type,
@@ -17,10 +17,10 @@ export function EntryForm({
   onCancel,
   onSave,
 }: {
-  type: EntryType;
-  initialData?: Record<string, unknown>;
-  onCancel: () => void;
-  onSave: () => void;
+  type: EntryType
+  initialData?: Record<string, unknown>
+  onCancel: () => void
+  onSave: () => void
 }) {
   const {
     register,
@@ -38,32 +38,40 @@ export function EntryForm({
       placement: (initialData?.placement as string) || '',
       displayOrder: (initialData?.displayOrder as number) || 0,
     },
-  });
+  })
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null)
 
   const onSubmit = async (data: EntryFormData) => {
-    setError(null);
+    setError(null)
     try {
       if (initialData?.id) {
-        await profileApi.updateEntry(initialData.id as string, data);
+        await profileApi.updateEntry(initialData.id as string, data)
       } else {
-        await profileApi.createEntry(data);
+        await profileApi.createEntry(data)
       }
-      onSave();
+      onSave()
     } catch (err) {
-       if (err instanceof ApiError && err.status === 401) {
-        setError('Authentication is not implemented yet. Profile persistence is unavailable.');
+      if (err instanceof ApiError && err.status === 401) {
+        setError('Authentication is not implemented yet. Profile persistence is unavailable.')
       } else {
-        setError((err as Error).message || 'Failed to save entry.');
+        setError((err as Error).message || 'Failed to save entry.')
       }
     }
-  };
+  }
 
   const defaultSections = [
-    'Header', 'Summary', 'Experience', 'Projects', 'Freelance Projects',
-    'Certifications', 'Education', 'Skills', 'Positions of Responsibility', 'Volunteer'
-  ];
+    'Header',
+    'Summary',
+    'Experience',
+    'Projects',
+    'Freelance Projects',
+    'Certifications',
+    'Education',
+    'Skills',
+    'Positions of Responsibility',
+    'Volunteer',
+  ]
 
   return (
     <form onSubmit={handleSubmit(onSubmit as never)} className="space-y-4">
@@ -110,7 +118,7 @@ export function EntryForm({
           <label className="block text-sm font-medium text-gray-700">End Date (optional)</label>
           <input
             {...register('end')}
-             placeholder="YYYY-MM or Ongoing"
+            placeholder="YYYY-MM or Ongoing"
             className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
               errors.end ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -134,13 +142,15 @@ export function EntryForm({
 
         <div>
           <label className="block text-sm font-medium text-gray-700">CV Section Placement</label>
-           <select
+          <select
             {...register('placement')}
             className="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
             <option value="">(Default)</option>
-            {defaultSections.map(s => (
-               <option key={s} value={s}>{s}</option>
+            {defaultSections.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
         </div>
@@ -172,5 +182,5 @@ export function EntryForm({
         </button>
       </div>
     </form>
-  );
+  )
 }
