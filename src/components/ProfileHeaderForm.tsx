@@ -1,14 +1,14 @@
-'use client';
+'use client'
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { headerSchema } from '@/lib/schemas/profile';
-import { z } from 'zod';
-import { useState } from 'react';
-import { profileApi, ApiError } from '@/lib/api/client';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { headerSchema } from '@/lib/schemas/profile'
+import { z } from 'zod'
+import { useState } from 'react'
+import { profileApi, ApiError } from '@/lib/api/client'
+import { CheckCircle2, AlertCircle } from 'lucide-react'
 
-type HeaderFormData = z.infer<typeof headerSchema>;
+type HeaderFormData = z.infer<typeof headerSchema>
 
 export function ProfileHeaderForm({ initialData }: { initialData?: Record<string, unknown> }) {
   const {
@@ -26,27 +26,30 @@ export function ProfileHeaderForm({ initialData }: { initialData?: Record<string
       portfolio: (initialData?.portfolio as string) || '',
       github: (initialData?.github as string) || '',
     },
-  });
+  })
 
-  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   const onSubmit = async (data: HeaderFormData) => {
-    setStatus(null);
+    setStatus(null)
     try {
-      await profileApi.updateProfileHeader(data);
-      setStatus({ type: 'success', message: 'Profile information saved successfully.' });
-      reset(data); // Reset isDirty
+      await profileApi.updateProfileHeader(data)
+      setStatus({ type: 'success', message: 'Profile information saved successfully.' })
+      reset(data) // Reset isDirty
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 401) {
         setStatus({
           type: 'error',
           message: 'Authentication is not implemented yet. Profile access is unavailable.',
-        });
+        })
       } else {
-        setStatus({ type: 'error', message: (err as Error).message || 'Failed to save profile information.' });
+        setStatus({
+          type: 'error',
+          message: (err as Error).message || 'Failed to save profile information.',
+        })
       }
     }
-  };
+  }
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
@@ -75,7 +78,9 @@ export function ProfileHeaderForm({ initialData }: { initialData?: Record<string
               errors.fullName ? 'border-red-300' : 'border-gray-300'
             }`}
           />
-          {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName.message}</p>}
+          {errors.fullName && (
+            <p className="mt-1 text-sm text-red-600">{errors.fullName.message}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -113,7 +118,9 @@ export function ProfileHeaderForm({ initialData }: { initialData?: Record<string
                 errors.linkedin ? 'border-red-300' : 'border-gray-300'
               }`}
             />
-            {errors.linkedin && <p className="mt-1 text-sm text-red-600">{errors.linkedin.message}</p>}
+            {errors.linkedin && (
+              <p className="mt-1 text-sm text-red-600">{errors.linkedin.message}</p>
+            )}
           </div>
 
           <div>
@@ -138,7 +145,9 @@ export function ProfileHeaderForm({ initialData }: { initialData?: Record<string
               errors.portfolio ? 'border-red-300' : 'border-gray-300'
             }`}
           />
-          {errors.portfolio && <p className="mt-1 text-sm text-red-600">{errors.portfolio.message}</p>}
+          {errors.portfolio && (
+            <p className="mt-1 text-sm text-red-600">{errors.portfolio.message}</p>
+          )}
         </div>
 
         <div className="pt-4 flex items-center justify-between border-t">
@@ -155,5 +164,5 @@ export function ProfileHeaderForm({ initialData }: { initialData?: Record<string
         </div>
       </form>
     </div>
-  );
+  )
 }

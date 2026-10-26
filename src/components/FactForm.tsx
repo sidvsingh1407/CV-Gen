@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { factSchema } from '@/lib/schemas/profile';
-import { z } from 'zod';
-import { useState } from 'react';
-import { profileApi, ApiError } from '@/lib/api/client';
-import { FactKind } from '@prisma/client';
-import { AlertCircle } from 'lucide-react';
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { factSchema } from '@/lib/schemas/profile'
+import { z } from 'zod'
+import { useState } from 'react'
+import { profileApi, ApiError } from '@/lib/api/client'
+import { FactKind } from '@prisma/client'
+import { AlertCircle } from 'lucide-react'
 
-type FactFormData = z.infer<typeof factSchema>;
+type FactFormData = z.infer<typeof factSchema>
 
 export function FactForm({
   entryId,
@@ -17,10 +17,10 @@ export function FactForm({
   onCancel,
   onSave,
 }: {
-  entryId: string;
-  initialData?: Record<string, unknown>;
-  onCancel: () => void;
-  onSave: () => void;
+  entryId: string
+  initialData?: Record<string, unknown>
+  onCancel: () => void
+  onSave: () => void
 }) {
   const {
     register,
@@ -34,31 +34,30 @@ export function FactForm({
       kind: (initialData?.kind as FactKind) || FactKind.free_text,
       evidenceNote: (initialData?.evidenceNote as string) || '',
     },
-  });
+  })
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null)
 
-
-  const kind = watch('kind');
-  const isLocked = initialData?.kind === FactKind.locked_number;
+  const kind = watch('kind')
+  const isLocked = initialData?.kind === FactKind.locked_number
 
   const onSubmit = async (data: FactFormData) => {
-    setError(null);
+    setError(null)
     try {
       if (initialData?.id) {
-        await profileApi.updateFact(initialData.id as string, data);
+        await profileApi.updateFact(initialData.id as string, data)
       } else {
-        await profileApi.createFact(entryId, data);
+        await profileApi.createFact(entryId, data)
       }
-      onSave();
+      onSave()
     } catch (err) {
-       if (err instanceof ApiError && err.status === 401) {
-        setError('Authentication is not implemented yet. Profile persistence is unavailable.');
+      if (err instanceof ApiError && err.status === 401) {
+        setError('Authentication is not implemented yet. Profile persistence is unavailable.')
       } else {
-        setError((err as Error).message || 'Failed to save fact.');
+        setError((err as Error).message || 'Failed to save fact.')
       }
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit as never)} className="space-y-3">
@@ -81,7 +80,9 @@ export function FactForm({
         />
         {errors.text && <p className="mt-1 text-xs text-red-600">{errors.text.message}</p>}
         {isLocked && !!initialData && (
-          <p className="mt-1 text-xs text-blue-600">This is a locked number fact. Its original text must be preserved exactly.</p>
+          <p className="mt-1 text-xs text-blue-600">
+            This is a locked number fact. Its original text must be preserved exactly.
+          </p>
         )}
       </div>
 
@@ -92,7 +93,9 @@ export function FactForm({
             {...register('kind')}
             disabled={isLocked && !!initialData}
             className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-xs ${
-              isLocked && !!initialData ? 'bg-gray-100 border-gray-300 cursor-not-allowed' : 'border-gray-300'
+              isLocked && !!initialData
+                ? 'bg-gray-100 border-gray-300 cursor-not-allowed'
+                : 'border-gray-300'
             }`}
           >
             <option value={FactKind.free_text}>Free Text</option>
@@ -101,7 +104,9 @@ export function FactForm({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-700">Evidence Note (Optional)</label>
+          <label className="block text-xs font-medium text-gray-700">
+            Evidence Note (Optional)
+          </label>
           <input
             {...register('evidenceNote')}
             className="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-xs"
@@ -111,7 +116,10 @@ export function FactForm({
       </div>
 
       {kind === FactKind.locked_number && !initialData && (
-        <p className="text-xs text-blue-600 italic">Locked numbers cannot have their text altered after being created to preserve verifiable accuracy.</p>
+        <p className="text-xs text-blue-600 italic">
+          Locked numbers cannot have their text altered after being created to preserve verifiable
+          accuracy.
+        </p>
       )}
 
       <div className="pt-2 flex items-center justify-end space-x-2">
@@ -131,5 +139,5 @@ export function FactForm({
         </button>
       </div>
     </form>
-  );
+  )
 }

@@ -1,33 +1,33 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { FactKind } from '@prisma/client';
-import { profileApi } from '@/lib/api/client';
-import { Plus, Edit2, Trash2, ShieldAlert } from 'lucide-react';
-import { FactForm } from './FactForm';
+import { useState } from 'react'
+import { FactKind } from '@prisma/client'
+import { profileApi } from '@/lib/api/client'
+import { Plus, Edit2, Trash2, ShieldAlert } from 'lucide-react'
+import { FactForm } from './FactForm'
 
 export function FactList({
   entryId,
   facts,
   onUpdate,
 }: {
-  entryId: string;
-  facts: Record<string, unknown>[];
-  onUpdate: () => void;
+  entryId: string
+  facts: Record<string, unknown>[]
+  onUpdate: () => void
 }) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [isAdding, setIsAdding] = useState(false)
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this fact?')) {
       try {
-        await profileApi.deleteFact(id);
-        onUpdate();
+        await profileApi.deleteFact(id)
+        onUpdate()
       } catch (err) {
-        alert((err as Error).message || 'Failed to delete fact');
+        alert((err as Error).message || 'Failed to delete fact')
       }
     }
-  };
+  }
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -51,8 +51,8 @@ export function FactList({
                 initialData={fact}
                 onCancel={() => setEditingId(null)}
                 onSave={() => {
-                  setEditingId(null);
-                  onUpdate();
+                  setEditingId(null)
+                  onUpdate()
                 }}
               />
             ) : (
@@ -68,7 +68,9 @@ export function FactList({
                   </div>
 
                   {fact.evidenceNote ? (
-                    <p className="text-xs text-gray-500 italic">Evidence: {fact.evidenceNote as string}</p>
+                    <p className="text-xs text-gray-500 italic">
+                      Evidence: {fact.evidenceNote as string}
+                    </p>
                   ) : (
                     <p className="text-xs text-amber-600 flex items-center">
                       <ShieldAlert className="h-3 w-3 mr-1" />
@@ -103,8 +105,8 @@ export function FactList({
               entryId={entryId}
               onCancel={() => setIsAdding(false)}
               onSave={() => {
-                setIsAdding(false);
-                onUpdate();
+                setIsAdding(false)
+                onUpdate()
               }}
             />
           </div>
@@ -115,5 +117,5 @@ export function FactList({
         )}
       </div>
     </div>
-  );
+  )
 }

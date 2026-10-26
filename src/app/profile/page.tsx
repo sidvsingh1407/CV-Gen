@@ -1,74 +1,74 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { profileApi, ApiError } from '@/lib/api/client';
-import { AlertCircle } from 'lucide-react';
-import { ProfileHeaderForm } from '@/components/ProfileHeaderForm';
-import { EntryList } from '@/components/EntryList';
-import { EducationSettings } from '@/components/EducationSettings';
+import { useEffect, useState } from 'react'
+import { profileApi, ApiError } from '@/lib/api/client'
+import { AlertCircle } from 'lucide-react'
+import { ProfileHeaderForm } from '@/components/ProfileHeaderForm'
+import { EntryList } from '@/components/EntryList'
+import { EducationSettings } from '@/components/EducationSettings'
 
 export default function ProfilePage() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null)
 
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     async function loadProfile() {
       try {
-        const data = await profileApi.getProfile();
-        if (isMounted) setProfile(data);
+        const data = await profileApi.getProfile()
+        if (isMounted) setProfile(data)
       } catch (err: unknown) {
-        if (!isMounted) return;
+        if (!isMounted) return
 
         if (err instanceof ApiError && err.status === 401) {
-          setError('Authentication is not implemented yet. Profile access is unavailable.');
+          setError('Authentication is not implemented yet. Profile access is unavailable.')
         } else {
-          setError((err as Error).message || 'Failed to load profile.');
+          setError((err as Error).message || 'Failed to load profile.')
         }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) setLoading(false)
       }
     }
 
-    loadProfile();
+    loadProfile()
 
     return () => {
-      isMounted = false;
-    };
-  }, []);
+      isMounted = false
+    }
+  }, [])
 
   const handleUpdate = async () => {
-     try {
-        const data = await profileApi.getProfile();
-        setProfile(data);
-      } catch (err: unknown) {
-        if (err instanceof ApiError && err.status === 401) {
-          setError('Authentication is not implemented yet. Profile access is unavailable.');
-        } else {
-          setError((err as Error).message || 'Failed to load profile.');
-        }
+    try {
+      const data = await profileApi.getProfile()
+      setProfile(data)
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 401) {
+        setError('Authentication is not implemented yet. Profile access is unavailable.')
+      } else {
+        setError((err as Error).message || 'Failed to load profile.')
       }
-  };
+    }
+  }
 
   const calculateCompletion = () => {
-     if (!profile) return 0;
-     let completed = 0;
-     const total = 5;
+    if (!profile) return 0
+    let completed = 0
+    const total = 5
 
-     if (profile.header && (profile.header as Record<string, unknown>).fullName) completed++;
-     if (profile.header && (profile.header as Record<string, unknown>).email) completed++;
+    if (profile.header && (profile.header as Record<string, unknown>).fullName) completed++
+    if (profile.header && (profile.header as Record<string, unknown>).email) completed++
 
-     const entries = profile.entries as Record<string, unknown>[] | undefined;
-     if (entries) {
-       if (entries.filter(e => e.type === 'experience').length > 0) completed++;
-       if (entries.filter(e => e.type === 'education').length > 0) completed++;
-       if (entries.filter(e => e.type === 'skill').length > 0) completed++;
-     }
+    const entries = profile.entries as Record<string, unknown>[] | undefined
+    if (entries) {
+      if (entries.filter((e) => e.type === 'experience').length > 0) completed++
+      if (entries.filter((e) => e.type === 'education').length > 0) completed++
+      if (entries.filter((e) => e.type === 'skill').length > 0) completed++
+    }
 
-     return Math.round((completed / total) * 100);
-  };
+    return Math.round((completed / total) * 100)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)] text-gray-900">
@@ -101,10 +101,10 @@ export default function ProfilePage() {
             <EducationSettings initialShowMarks={(profile.showMarks as boolean) || false} />
             <EntryList entries={(profile.entries as never) || []} onUpdate={handleUpdate} />
           </div>
-        ) : !error && (
-          <div className="text-gray-500">No profile data available.</div>
+        ) : (
+          !error && <div className="text-gray-500">No profile data available.</div>
         )}
       </div>
     </div>
-  );
+  )
 }
