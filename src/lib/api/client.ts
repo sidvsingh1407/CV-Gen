@@ -66,3 +66,8 @@ export const preferencesApi = {
   updatePreferences: (data: unknown) =>
     fetchApi('/api/preferences', { method: 'PATCH', body: JSON.stringify(data) }),
 }
+
+export const jdApi = {
+  parseJd: (text: string) =>
+    fetchApi('/api/jd/parse', { method: 'POST', body: JSON.stringify({ text }) }),
+}
