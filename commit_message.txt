@@ -1,0 +1,23 @@
+Task 7 — Finalisation and Handoff
+
+Files Changed:
+- `src/lib/schemas/preferences.ts`: Added validation schema for preferences.
+- `src/lib/services/preferences.ts`: Implemented backend service logic for preferences using existing `rule_settings` model.
+- `src/app/api/preferences/route.ts`: Created GET and PATCH API routes (auth boundary maintained).
+- `src/app/preferences/page.tsx`: Built the configuration UI with form validation.
+- `src/lib/api/client.ts`: Added endpoints to API client.
+- Test files updated or added in respective directories (`src/lib/services/__tests__`, `src/lib/db/__tests__`, `src/app/api/preferences/__tests__`, `src/app/preferences/__tests__`).
+- Fixed `vitest.setup.ts` resolving global expect issues and updated test db tearing down to prevent unique constraint failures.
+
+Database & Migration:
+- Verified that `rule_settings` table (mapped to `RuleSettings` model) already existed from Task 1 initialization (`20261024074307_init`), preventing the need to add any new Prisma migrations. Prisma `generate` was re-run successfully.
+
+Checks & Results:
+- `npm run test`: All 48 tests pass successfully, including DB integration tests.
+- `npm run typecheck`: Passed.
+- `npm run lint`: Passed (1 expected warning about react-hook-form's watch skipping compiler memoization).
+- `npm run build`: Production build succeeded.
+- `python3 /home/jules/verification/verify_preferences_auth_mock.py`: Hand-tested UI defaults and states successfully output to screenshot.
+- Automated API endpoints continue to enforce `401` as authentication boundaries are strictly preserved.
+
+No limitations or blockers remain. Task 7 is complete and ready to commit.
