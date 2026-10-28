@@ -71,3 +71,10 @@ export const jdApi = {
   parseJd: (text: string) =>
     fetchApi('/api/jd/parse', { method: 'POST', body: JSON.stringify({ text }) }),
 }
+
+export const fitApi = {
+  scoreFit: (jd: unknown) =>
+    fetchApi('/api/fit/score', { method: 'POST', body: JSON.stringify({ jd }) }),
+  recordDecision: (data: unknown) =>
+    fetchApi('/api/fit/decision', { method: 'POST', body: JSON.stringify(data) }),
+}
