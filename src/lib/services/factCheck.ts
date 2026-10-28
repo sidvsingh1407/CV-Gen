@@ -46,7 +46,7 @@ export function runFactCheck(input: FactCheckInput): FactCheckResult {
   let supportedCount = 0
   let partialCount = 0
   let unsupportedCount = 0
-  let uncertainCount = 0
+  const uncertainCount = 0
   let blockingIssueCount = 0
 
   const entryLookup = new Map<string, ProfileEntryWithFacts>()

@@ -1,18 +1,9 @@
-Implement Task 8: Job Description Parser
+feat: Implement DOCX/PDF rendering and export (Task 14)
 
-This commit implements a deterministic, provider-independent Job Description
-parser as outlined in Task 8.
-
-Changes include:
-- `src/lib/schemas/jdParser.ts`: Zod schemas for input validation and structured
-  parsed output representation.
-- `src/lib/services/jdParser.ts`: Layered parsing logic using heuristics to
-  extract job details (title, company, work arrangement, etc) and section-based
-  bullet extraction for responsibilities, qualifications, and skills.
-- `src/app/api/jd/parse/route.ts`: A protected API endpoint that uses the parser
-  and maintains current authentication conventions (401 mock).
-- `src/app/jd-parser/page.tsx`: A straightforward UI for pasting a job
-  description, validating input length (30,000 max chars), and reviewing the
-  structured results with warnings.
-- `src/lib/api/client.ts`: Added `parseJd` to the centralized fetch wrapper.
-- Focused unit and UI tests for parser heuristics, API behavior, and UI states.
+- Added `src/lib/services/render/docx.ts` using `docx` package to render CV drafts.
+- Added `src/lib/services/render/pdf.ts` executing headless LibreOffice safely to convert DOCX to PDF, with graceful failure if unavailable.
+- Implemented `src/lib/services/render/index.ts` to coordinate export and strongly enforce the fact-checking release gate server-side.
+- Created `POST /api/cv/export` to handle DOCX/PDF requests safely, respecting standard unauthenticated 401 returns until full auth is present.
+- Built a simple `ExportControls.tsx` component.
+- Wrote full unit test coverage for rendering pipelines and PDF limitations.
+- Note: DB integration tests fail locally because the database container is not running in the CI environment (as expected by Task 14 specs, reported here).
