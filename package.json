@@ -25,6 +25,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-hook-form": "^7.91.0",
+    "uuid": "^14.0.3",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -41,6 +42,7 @@
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^6.1.2",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
